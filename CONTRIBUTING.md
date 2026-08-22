@@ -1,0 +1,33 @@
+# Contributing
+
+## Setup
+
+1. `cp .env.example .env` and fill in local values (defaults work with the
+   bundled `docker-compose.yml` Postgres).
+2. `docker compose up -d postgres`
+3. `npm install` (root — npm workspaces monorepo, one install covers
+   everything under `apps/` and `packages/`).
+4. `npm run db:generate --workspace=apps/api` then
+   `npm run db:migrate --workspace=apps/api`.
+5. `npm run dev:api`, and in a second terminal, `npm run dev:web`.
+
+## Conventions
+
+- One responsibility per service (`apps/api/src/services`). If you're adding
+  a second concern to an existing service, it probably belongs in a new one.
+- New payment rails / identity verifiers / anchor chains are new
+  implementations of the relevant interface in `apps/api/src/interfaces` (or
+  `@ayudaan/chain-anchor`), never a conditional inside an existing service.
+- `packages/fraud-heuristics` is intentionally minimal here — read its
+  README before assuming it's incomplete by accident.
+- If a change reflects a real architectural decision (not just an
+  implementation detail), add a short ADR under `docs/adr/` following the
+  existing numbering.
+- Every new required environment variable gets added to `.env.example` in
+  the same PR that introduces it.
+
+## Where things live
+
+See `docs/ARCHITECTURE.md` for the current service/interface map, and
+`docs/spec/ayudaan-spec-v0.3.md` for the full product and technical spec this
+scaffold is built from.
