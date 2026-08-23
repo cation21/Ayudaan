@@ -1,0 +1,49 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 6px;
+  border-radius: 999px;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  transform: rotate(-2deg);
+  white-space: nowrap;
+}
+
+.ring {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.ring circle {
+  stroke: currentColor;
+}
+
+.label {
+  line-height: 1;
+}
+
+.muted {
+  background: #eceee9;
+  color: var(--color-ink-soft);
+}
+
+.verified {
+  background: var(--color-verified-soft);
+  color: var(--color-verified);
+}
+
+.csr {
+  background: #f8ead3;
+  color: var(--color-marigold-deep);
+}
+
+.md {
+  font-size: 13px;
+  padding: 4px 12px 4px 8px;
+}
+.md .ring {
+  width: 18px;
+  height: 18px;
+}

@@ -1,0 +1,99 @@
+.prompt {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  color: var(--color-ink-soft);
+  font-size: 15px;
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+.form {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.input,
+.textarea {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: 14px;
+  width: 100%;
+}
+.textarea {
+  resize: vertical;
+}
+
+.row {
+  display: flex;
+  gap: var(--space-3);
+}
+.row .input {
+  flex: 1;
+}
+
+.amount {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--color-ink-soft);
+}
+.amount input {
+  border: none;
+  outline: none;
+  width: 100px;
+  padding: var(--space-2) 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.error {
+  color: var(--color-stamp);
+  font-size: 13px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.cancel {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.submit {
+  background: var(--color-marigold);
+  color: var(--color-surface);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

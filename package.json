@@ -1,0 +1,21 @@
+{
+  "name": "ayudaan",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Ayudaan — transparent, verified need & donation platform (India-first, CSR/grant-focused)",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:api": "npm run dev --workspace=apps/api",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:generate": "npm run db:generate --workspace=apps/api",
+    "db:migrate": "npm run db:migrate --workspace=apps/api"
+  }
+}

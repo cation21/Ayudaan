@@ -1,0 +1,141 @@
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.header h1 {
+  font-size: 26px;
+}
+
+.joined {
+  font-size: 13px;
+  color: var(--color-ink-soft);
+  white-space: nowrap;
+}
+
+.tabs {
+  display: flex;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+.tab,
+.tabActive {
+  background: none;
+  border: none;
+  padding: var(--space-2) 0 var(--space-3);
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--color-ink-soft);
+}
+.tabActive {
+  color: var(--color-ink);
+  font-weight: 600;
+  border-bottom: 2px solid var(--color-marigold);
+}
+
+.postList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.donationList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.donationList li {
+  display: flex;
+  justify-content: space-between;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  font-size: 14px;
+}
+
+.empty {
+  color: var(--color-ink-soft);
+  font-size: 14px;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  position: sticky;
+  top: var(--space-5);
+}
+
+.vouchBox {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.vouchButton {
+  background: var(--color-verified);
+  color: var(--color-surface);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+.vouchButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.vouchHint {
+  font-size: 12px;
+  color: var(--color-ink-soft);
+  margin: 0;
+}
+
+.vouchMessage {
+  font-size: 13px;
+  color: var(--color-verified);
+}
+
+.error {
+  background: #fbeceb;
+  border: 1px solid #e3b3ae;
+  color: var(--color-stamp);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  font-size: 14px;
+}
+
+.loading {
+  color: var(--color-ink-soft);
+  font-size: 14px;
+}
+
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

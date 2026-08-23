@@ -1,0 +1,96 @@
+.module {
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: var(--space-3);
+}
+
+.tag {
+  font-weight: 400;
+  color: var(--color-verified);
+}
+
+.pending {
+  font-size: 13px;
+  color: var(--color-ink-soft);
+  text-align: center;
+  padding: var(--space-5) var(--space-3);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.entries {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.entry {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+  background: var(--color-paper);
+}
+
+.entryMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  font-size: 13px;
+}
+
+.verified {
+  color: var(--color-verified);
+  font-weight: 500;
+}
+.unverified {
+  color: var(--color-ink-soft);
+}
+
+.uploadedAt {
+  font-size: 12px;
+  color: var(--color-ink-soft);
+}
+
+.verifyButton {
+  background: none;
+  border: 1px solid var(--color-verified);
+  color: var(--color-verified);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-3);
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.uploadLabel {
+  align-self: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--color-marigold-deep);
+  font-weight: 500;
+}

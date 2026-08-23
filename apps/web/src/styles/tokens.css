@@ -1,0 +1,39 @@
+/*
+ * Design tokens — "ledger & seal" system.
+ * Rationale lives in docs/ARCHITECTURE.md; short version: the palette and
+ * type pairing are built around the product's actual claim (verifiable,
+ * audited, India-rooted giving), not a generic dashboard look.
+ */
+:root {
+  /* Color */
+  --color-ink: #1c2b39;
+  --color-ink-soft: #4b5b68;
+  --color-paper: #edf1eb;
+  --color-surface: #ffffff;
+  --color-marigold: #e2963b;
+  --color-marigold-deep: #c97a22;
+  --color-verified: #2e6b4e;
+  --color-verified-soft: #e3ede7;
+  --color-stamp: #a6362c;
+  --color-border: #d8ddd4;
+
+  /* Type */
+  --font-display: "Fraunces", "Georgia", serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Radius — deliberately small; ledger paper isn't a rounded material */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+
+  --shadow-card: 0 1px 2px rgba(28, 43, 57, 0.06), 0 1px 1px rgba(28, 43, 57, 0.04);
+}
