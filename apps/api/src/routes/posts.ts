@@ -1,4 +1,4 @@
-import { eq, inArray, sql } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { Router } from "express";
 import type { PublicLedgerEntry } from "@ayudaan/shared-types";
 import { attachIndividualIfPresent, requireAnyAuth } from "../auth/middleware.js";
@@ -6,6 +6,7 @@ import { db } from "../db/client.js";
 import { posts, users } from "../db/schema.js";
 import { DrizzleLedgerRepository } from "../db/repositories/ledger-repository.js";
 import { MockPaymentProvider } from "../payments/mock-payment-provider.js";
+import { ContributionService } from "../services/contribution-service.js";
 import { LedgerService } from "../services/ledger-service.js";
 import { PaymentService } from "../services/payment-service.js";
 import { PostQueryService } from "../services/post-query-service.js";
@@ -18,6 +19,7 @@ export const postsRouter = Router();
 const postQueryService = new PostQueryService();
 const ledgerService = new LedgerService(new DrizzleLedgerRepository());
 const paymentService = new PaymentService(new MockPaymentProvider());
+const contributionService = new ContributionService(paymentService, ledgerService);
 
 postsRouter.get("/posts", async (_req, res) => {
   const list = await postQueryService.listActive();
@@ -99,6 +101,11 @@ postsRouter.get("/posts/:id/ledger", async (req, res) => {
 // attachIndividualIfPresent: donating doesn't require a login, but if a
 // valid Default Login token IS present, the donation is attributed to
 // that user instead of staying anonymous.
+//
+// NOTE (spec section 9): MockPaymentProvider always succeeds so this
+// path is demoable locally without real Razorpay keys. A real
+// PaymentProvider should be confirmed via a signature-verified,
+// idempotent webhook rather than trusting this response directly.
 postsRouter.post("/posts/:id/donate", attachIndividualIfPresent, async (req, res) => {
   const postId = Number(req.params.id);
   const { amountInPaise } = req.body ?? {};
@@ -112,42 +119,6 @@ postsRouter.post("/posts/:id/donate", attachIndividualIfPresent, async (req, res
     return;
   }
 
-  // NOTE (spec section 9): MockPaymentProvider always succeeds so this
-  // path is demoable locally without real Razorpay keys. A real
-  // PaymentProvider should be confirmed via a signature-verified,
-  // idempotent webhook rather than trusting this response directly.
-  const { providerTransactionId } = await paymentService.charge(amountInPaise, { postId });
-
-  const amountRupees = (amountInPaise / 100).toFixed(2);
-
-  const entry = await ledgerService.recordDonation({
-    postId,
-    donorUserId: req.user?.userId ?? null,
-    amount: amountRupees,
-    providerTransactionId,
-  });
-
-  await db
-    .update(posts)
-    .set({ raisedAmount: sql`${posts.raisedAmount} + ${amountRupees}` })
-    .where(eq(posts.id, postId));
-
-  // Bug fix: nothing previously set status to "funded", even though the
-  // frontend PostCard already renders a "Fully funded" state for it —
-  // that state was unreachable before this.
-  const [updatedPost] = await db
-    .select({ raisedAmount: posts.raisedAmount, requestedAmount: posts.requestedAmount, status: posts.status })
-    .from(posts)
-    .where(eq(posts.id, postId))
-    .limit(1);
-
-  if (
-    updatedPost &&
-    updatedPost.status === "active" &&
-    Number(updatedPost.raisedAmount) >= Number(updatedPost.requestedAmount)
-  ) {
-    await db.update(posts).set({ status: "funded" }).where(eq(posts.id, postId));
-  }
-
-  res.status(201).json({ ledgerEntryId: entry.id, hash: entry.hash });
+  const contribution = await contributionService.contribute(postId, req.user?.userId ?? null, amountInPaise);
+  res.status(201).json({ ledgerEntryId: contribution.ledgerEntryId, hash: contribution.hash });
 });

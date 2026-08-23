@@ -2,20 +2,16 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import type { PublicPost } from "@ayudaan/shared-types";
 import { AppShell } from "../../components/AppShell/AppShell";
+import { Avatar } from "../../components/Avatar/Avatar";
 import { PostCard } from "../../components/PostCard/PostCard";
 import { TrustPanel } from "../../components/TrustPanel/TrustPanel";
 import { useAuth } from "../../context/AuthContext";
+import { usePostInteractions } from "../../hooks/usePostInteractions";
 import {
-  donate,
-  fetchLedger,
-  fetchProof,
   fetchUserDonationsMade,
   fetchUserDonationsReceived,
   fetchUserPosts,
   fetchUserProfile,
-  flagPost,
-  uploadProof,
-  verifyProof,
   vouchForUser,
   type DonationMade,
   type DonationReceived,
@@ -36,8 +32,6 @@ export function IndividualProfile() {
 
   const [profile, setProfile] = useState<PublicUserProfile | null>(null);
   const [posts, setPosts] = useState<PublicPost[]>([]);
-  const [ledgerByPost, setLedgerByPost] = useState<Record<number, Awaited<ReturnType<typeof fetchLedger>>>>({});
-  const [proofByPost, setProofByPost] = useState<Record<number, Awaited<ReturnType<typeof fetchProof>>>>({});
   const [donationsMade, setDonationsMade] = useState<DonationMade[]>([]);
   const [donationsReceived, setDonationsReceived] = useState<DonationReceived[]>([]);
   const [tab, setTab] = useState<Tab>("posts");
@@ -59,24 +53,14 @@ export function IndividualProfile() {
       setDonationsMade(madeList);
       setDonationsReceived(receivedList);
       setError(null);
-
-      const [ledgerResults, proofResults] = await Promise.all([
-        Promise.all(postList.map((p) => fetchLedger(p.id))),
-        Promise.all(postList.map((p) => fetchProof(p.id))),
-      ]);
-      const ledgerMap: typeof ledgerByPost = {};
-      const proofMap: typeof proofByPost = {};
-      postList.forEach((p, i) => {
-        ledgerMap[p.id] = ledgerResults[i];
-        proofMap[p.id] = proofResults[i];
-      });
-      setLedgerByPost(ledgerMap);
-      setProofByPost(proofMap);
+      await loadAuxData(postList);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  const { loadAuxData, postCardProps } = usePostInteractions(load);
 
   useEffect(() => {
     load();
@@ -124,10 +108,11 @@ export function IndividualProfile() {
       <div className={styles.layout}>
         <div className={styles.main}>
           <header className={styles.header}>
-            <h1>{profile.displayName ?? "Unnamed"}</h1>
-            <span className={styles.joined}>
-              Joined {new Date(profile.createdAt).toLocaleDateString()}
-            </span>
+            <Avatar name={profile.displayName ?? "Unnamed"} size="lg" />
+            <div className={styles.headerText}>
+              <h1>{profile.displayName ?? "Unnamed"}</h1>
+              <span className={styles.joined}>Joined {new Date(profile.createdAt).toLocaleDateString()}</span>
+            </div>
           </header>
 
           <div className={styles.tabs}>
@@ -154,27 +139,7 @@ export function IndividualProfile() {
             <div className={styles.postList}>
               {posts.length === 0 && <p className={styles.empty}>No posts yet.</p>}
               {posts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  recentDonations={ledgerByPost[post.id] ?? []}
-                  proofEntries={proofByPost[post.id] ?? []}
-                  onDonate={async (amountInRupees) => {
-                    await donate(post.id, amountInRupees * 100);
-                    await load();
-                  }}
-                  onUploadProof={async (file) => {
-                    await uploadProof(post.id, file);
-                    await load();
-                  }}
-                  onVerifyProof={async (proofId) => {
-                    await verifyProof(post.id, proofId);
-                    await load();
-                  }}
-                  onFlag={async () => {
-                    await flagPost(post.id);
-                  }}
-                />
+                <PostCard key={post.id} post={post} {...postCardProps(post)} />
               ))}
             </div>
           )}

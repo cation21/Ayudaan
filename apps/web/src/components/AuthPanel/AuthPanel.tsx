@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { OrgOption } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
+import { Avatar } from "../Avatar/Avatar";
 import styles from "./AuthPanel.module.css";
 
 type AccountKind = "individual" | "org";
@@ -23,7 +24,10 @@ export function AuthPanel() {
       session.type === "individual" ? session.user.displayName ?? "you" : `${session.organization.name} (org)`;
     return (
       <div className={styles.panel}>
-        <span className={styles.signedIn}>Signed in as {label}</span>
+        <div className={styles.signedInRow}>
+          <Avatar name={label} size="sm" />
+          <span className={styles.signedIn}>Signed in as {label}</span>
+        </div>
         <button type="button" className={styles.linkButton} onClick={logout}>
           Log out
         </button>

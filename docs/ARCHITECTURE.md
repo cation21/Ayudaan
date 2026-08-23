@@ -25,6 +25,7 @@ graph LR
     proof_route["routes/proof.ts"]
     users_route["routes/users.ts"]
     orgs_route["routes/organizations.ts"]
+    interactions_route["routes/interactions.ts<br/>likes, comments"]
   end
 
   subgraph Middleware["auth/middleware.ts"]
@@ -37,6 +38,7 @@ graph LR
   subgraph Services["Services (Single Responsibility)"]
     svc_ledger["LedgerService"]
     svc_payment["PaymentService"]
+    svc_contribution["ContributionService<br/>(charge+ledger+raisedAmount, shared by donate/like/comment)"]
     svc_postquery["PostQueryService"]
     svc_verification["VerificationService — unused by any route"]
     svc_grant["GrantService — unused by any route"]
@@ -60,8 +62,7 @@ graph LR
 
   posts_route --> mw_any
   posts_route --> mw_ind
-  posts_route --> svc_ledger
-  posts_route --> svc_payment
+  posts_route --> svc_contribution
   posts_route --> svc_postquery
 
   proof_route --> mw_any
@@ -74,6 +75,11 @@ graph LR
   orgs_route --> mw_dev
   orgs_route --> svc_postquery
 
+  interactions_route --> mw_ind
+  interactions_route --> svc_contribution
+
+  svc_contribution --> svc_ledger
+  svc_contribution --> svc_payment
   svc_ledger --> if_ledger
   svc_payment --> if_payment
   svc_verification -.-> if_identity
@@ -115,11 +121,18 @@ graph TD
   OrgProfile --> PostCard
   OrgProfile --> TrustPanel
 
+  Home --> usePostInteractions["hooks/usePostInteractions"]
+  IndProfile --> usePostInteractions
+  OrgProfile --> usePostInteractions
+
   PostCard --> VerifiedStamp
   PostCard --> ProofOfWork
+  PostCard --> CommentSection
+  PostCard --> Avatar
   PostCard --> AuthContext
   PostComposer --> AuthContext
   AuthPanel --> AuthContext
+  AuthPanel --> Avatar
 
   AuthContext --> lib_api["lib/api.ts"]
   AuthContext --> lib_auth["lib/auth.ts (session storage)"]
@@ -260,6 +273,48 @@ Login token attributes the donation to that user. Verified end-to-end —
 an authenticated donation shows the donor's real name in
 `GET /posts/:id/ledger`; an anonymous one shows `null`.
 
+## UI redesign & real interactions — "₹1 to interact" made real
+
+Earlier rounds built a distinctive "ledger stamp" visual language that,
+on reflection against the spec's actual UI Inspo (section 12 —
+Instagram/Twitter-style profiles, WhatsApp-payment-style cards), had
+drifted further from the intended look than was useful. This round
+pulled it back toward that original vision and, in doing so, found that
+"₹1 to interact" (spec section 4.3) was pure decorative text — no like
+button, no comment box, nothing behind it.
+
+**Visual changes:** `Avatar` (new component — deterministic color +
+initials, no image upload needed) now appears on post authors, donor
+avatar stacks under the progress bar, comment authors, and profile page
+headers. The progress bar is a smooth filled bar again, not the earlier
+tally-mark segments — more recognizable as "a progress bar" the way the
+spec describes it. `PostCard`'s footer became a real action row (like /
+comment / share icons via `lucide-react`), not a caption next to a
+"Report" link.
+
+**Made real, not just restyled:** every like and every comment is now a
+genuine `ContributionService.contribute()` call — the exact same
+charge → ledger → `raisedAmount` → funded-check pipeline a donation
+uses, per spec section 4.3's "every interaction is itself a
+micro-donation." `ContributionService` was extracted from the donate
+route specifically so likes and comments could reuse it instead of
+duplicating that pipeline a third time. Verified end-to-end: a donate +
+a like + a comment on the same post produced exactly three ledger
+entries and the correct summed `raisedAmount` (₹500 + ₹1 + ₹1 = ₹502).
+
+A like is one-time per (post, user) — enforced by a unique index, not
+just a check in the route — because it's a real donation, not a
+toggleable reaction; double-clicking doesn't double-charge (verified).
+Comments require Default Login specifically (not
+`attachIndividualIfPresent`) since an anonymous comment doesn't fit a
+social feed the way an anonymous donation does.
+
+`usePostInteractions` (new shared hook, `apps/web/src/hooks`) exists
+because `Home`, `IndividualProfile`, and `OrgProfile` all render the same
+`PostCard` feed and were about to triple the same fetch-ledger/proof/likes
++ five-callback block — extracted for the identical reason
+`ContributionService` was extracted on the backend.
+
 ## Backend routes (`apps/api`) — wired, not stubs
 
 `POST /posts/:id/donate` → `PaymentService.charge` (via `MockPaymentProvider`
@@ -387,9 +442,11 @@ Component map, one directory per component (co-located `.tsx` +
 
 | Component | Role |
 |---|---|
+| `Avatar` | Deterministic colored-initials avatar — no image storage needed; used on post authors, donor stacks, comments, profile headers |
 | `VerifiedStamp` | The one signature element — a rotated ink-stamp ring used everywhere a verification tier is shown, instead of a generic checkmark |
 | `TrustPanel` | Trust score + compliance checklist + ledger link — one implementation reused across org/individual/post views (spec Appendix A) |
-| `PostCard` | Need-request post, styled as a ledger stub (dashed tear-line, tally-mark progress instead of a gradient bar) |
+| `PostCard` | Instagram/WhatsApp-style social card — avatar header, smooth progress bar, donor avatar stack, real like/comment/share action row |
+| `CommentSection` | Comment list + input, only visible once expanded — comments are ₹1 micro-donations, not free text |
 | `ProofOfWork` | Dual-state proof-of-use module (pending / uploaded), per-entry verify action |
 | `PostComposer` | Collapsed prompt → create-post form, individual or org author |
 | `AuthPanel` | Individual/Organization login toggle, register, multi-org picker |

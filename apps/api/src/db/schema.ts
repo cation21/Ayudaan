@@ -9,6 +9,7 @@ import {
   numeric,
   jsonb,
   pgEnum,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 // --- Enums (mirror spec section 5 verification tiers, section 7 grants) ---
@@ -159,6 +160,43 @@ export const grantApplications = pgTable("grant_applications", {
     .notNull()
     .references(() => organizations.id),
   status: grantApplicationStatusEnum("status").notNull().default("submitted"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// "₹1 to interact" (spec section 4.3) made real: a like is a ₹1
+// micro-donation, one per (post, user) — can't be un-given once made,
+// consistent with it being a real ledger entry, not a toggleable social
+// reaction. ledgerEntryId makes the connection auditable.
+export const likes = pgTable(
+  "likes",
+  {
+    id: serial("id").primaryKey(),
+    postId: integer("post_id")
+      .notNull()
+      .references(() => posts.id),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id),
+    ledgerEntryId: integer("ledger_entry_id").references(() => ledgerEntries.id),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    onePerPostPerUser: uniqueIndex("likes_post_user_unique").on(table.postId, table.userId),
+  })
+);
+
+// Same "₹1 to interact" mechanic as likes — a comment is also a ₹1
+// micro-donation (spec section 4.3), not a free-form free action.
+export const comments = pgTable("comments", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id")
+    .notNull()
+    .references(() => posts.id),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  ledgerEntryId: integer("ledger_entry_id").references(() => ledgerEntries.id),
+  body: text("body").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

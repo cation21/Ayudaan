@@ -1,12 +1,12 @@
 import "../env.js";
+import { and, eq } from "drizzle-orm";
 import { db } from "./client.js";
 import { orgMemberships, organizations, posts, users } from "./schema.js";
 import { hashPassword } from "../auth/password.js";
 
 // Dev-only seed data — mirrors what the frontend previously rendered from
 // apps/web/src/data/mock.ts, now persisted for real so GET /posts has
-// something to return. Safe to re-run against a fresh database; not
-// idempotent against a non-empty one (will insert duplicates).
+// something to return. Safe to re-run against a non-empty database.
 //
 // Demo credentials (password for both: "password123"):
 //   POST /login      { "email": "arjun@example.com", "password": "password123" }
@@ -14,57 +14,92 @@ import { hashPassword } from "../auth/password.js";
 async function main() {
   const demoPasswordHash = await hashPassword("password123");
 
-  const [arjun] = await db
-    .insert(users)
-    .values({
-      email: "arjun@example.com",
-      displayName: "Arjun Kumar",
-      passwordHash: demoPasswordHash,
-      verificationTier: "community_verified",
-    })
-    .returning();
+  const [existingArjun] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, "arjun@example.com"));
+  const [arjun] = existingArjun
+    ? [existingArjun]
+    : await db
+        .insert(users)
+        .values({
+          email: "arjun@example.com",
+          displayName: "Arjun Kumar",
+          passwordHash: demoPasswordHash,
+          verificationTier: "community_verified",
+        })
+        .returning();
 
-  const [priya] = await db
-    .insert(users)
-    .values({
-      email: "priya@reliefwarriors.org",
-      displayName: "Priya Singh",
-      passwordHash: demoPasswordHash,
-      verificationTier: "unverified",
-    })
-    .returning();
+  const [existingPriya] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, "priya@reliefwarriors.org"));
+  const [priya] = existingPriya
+    ? [existingPriya]
+    : await db
+        .insert(users)
+        .values({
+          email: "priya@reliefwarriors.org",
+          displayName: "Priya Singh",
+          passwordHash: demoPasswordHash,
+          verificationTier: "unverified",
+        })
+        .returning();
 
-  const [reliefWarriors] = await db
-    .insert(organizations)
-    .values({
-      name: "Relief Warriors",
-      orgType: "ngo",
-      darpanId: "MH/2021/0001",
-      reg12a80g: "AAAAA0000A",
-      csr1Registered: false,
-      verificationTier: "document_verified",
-    })
-    .returning();
+  const [existingReliefWarriors] = await db
+    .select()
+    .from(organizations)
+    .where(eq(organizations.name, "Relief Warriors"));
+  const [reliefWarriors] = existingReliefWarriors
+    ? [existingReliefWarriors]
+    : await db
+        .insert(organizations)
+        .values({
+          name: "Relief Warriors",
+          orgType: "ngo",
+          darpanId: "MH/2021/0001",
+          reg12a80g: "AAAAA0000A",
+          csr1Registered: false,
+          verificationTier: "document_verified",
+        })
+        .returning();
 
-  await db.insert(orgMemberships).values({
-    organizationId: reliefWarriors.id,
-    userId: priya.id,
-    role: "admin",
-  });
+  const [existingMembership] = await db
+    .select()
+    .from(orgMemberships)
+    .where(
+      and(
+        eq(orgMemberships.organizationId, reliefWarriors.id),
+        eq(orgMemberships.userId, priya.id)
+      )
+    );
+  if (!existingMembership) {
+    await db.insert(orgMemberships).values({
+      organizationId: reliefWarriors.id,
+      userId: priya.id,
+      role: "admin",
+    });
+  }
 
-  const [helpingHands] = await db
-    .insert(organizations)
-    .values({
-      name: "Helping Hands Foundation",
-      orgType: "ngo",
-      darpanId: "MH/2020/0287",
-      reg12a80g: "AAAAA1111A",
-      csr1Registered: true,
-      verificationTier: "csr_eligible",
-    })
-    .returning();
+  const [existingHelpingHands] = await db
+    .select()
+    .from(organizations)
+    .where(eq(organizations.name, "Helping Hands Foundation"));
+  const [helpingHands] = existingHelpingHands
+    ? [existingHelpingHands]
+    : await db
+        .insert(organizations)
+        .values({
+          name: "Helping Hands Foundation",
+          orgType: "ngo",
+          darpanId: "MH/2020/0287",
+          reg12a80g: "AAAAA1111A",
+          csr1Registered: true,
+          verificationTier: "csr_eligible",
+        })
+        .returning();
 
-  await db.insert(posts).values([
+  const demoPosts = [
     {
       authorUserId: arjun.id,
       title: "Emergency heart surgery for my father",
@@ -73,7 +108,7 @@ async function main() {
       category: "Medical Emergency",
       requestedAmount: "25000",
       raisedAmount: "0",
-      status: "active",
+      status: "active" as const,
     },
     {
       authorOrganizationId: reliefWarriors.id,
@@ -83,7 +118,7 @@ async function main() {
       category: "Disaster Relief",
       requestedAmount: "100000",
       raisedAmount: "0",
-      status: "active",
+      status: "active" as const,
     },
     {
       authorOrganizationId: helpingHands.id,
@@ -93,9 +128,22 @@ async function main() {
       category: "Education",
       requestedAmount: "40000",
       raisedAmount: "0",
-      status: "active",
+      status: "active" as const,
     },
-  ]);
+  ];
+
+  for (const demoPost of demoPosts) {
+    const authorCondition = demoPost.authorUserId
+      ? eq(posts.authorUserId, demoPost.authorUserId)
+      : eq(posts.authorOrganizationId, demoPost.authorOrganizationId!);
+    const [existingPost] = await db
+      .select()
+      .from(posts)
+      .where(and(authorCondition, eq(posts.title, demoPost.title)));
+    if (!existingPost) {
+      await db.insert(posts).values(demoPost);
+    }
+  }
 
   console.log("Seed complete.");
 }

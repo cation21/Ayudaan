@@ -13,18 +13,22 @@
 
 .header {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
+  align-items: center;
+  gap: var(--space-4);
 }
-.header h1 {
-  font-size: 26px;
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.headerText h1 {
+  font-size: 24px;
 }
 
 .joined {
   font-size: 13px;
   color: var(--color-ink-soft);
-  white-space: nowrap;
 }
 
 .tabs {

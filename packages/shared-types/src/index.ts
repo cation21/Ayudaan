@@ -47,6 +47,19 @@ export interface ProofEntry {
   uploadedAt: string;
 }
 
+export interface LikeStatus {
+  count: number;
+  likedByMe: boolean;
+}
+
+export interface PostComment {
+  id: number;
+  postId: number;
+  body: string;
+  authorDisplayName: string;
+  createdAt: string;
+}
+
 export interface TrustCheck {
   label: string;
   passed: boolean;

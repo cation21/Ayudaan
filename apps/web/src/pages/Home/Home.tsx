@@ -1,17 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
-import type { ProofEntry, PublicLedgerEntry, PublicPost } from "@ayudaan/shared-types";
+import type { PublicPost } from "@ayudaan/shared-types";
 import { AppShell } from "../../components/AppShell/AppShell";
 import { PostCard } from "../../components/PostCard/PostCard";
 import { PostComposer } from "../../components/PostComposer/PostComposer";
 import { TrustPanel } from "../../components/TrustPanel/TrustPanel";
+import { usePostInteractions } from "../../hooks/usePostInteractions";
 import { MOCK_VERIFIED_ORGS } from "../../data/mock";
-import { donate, fetchLedger, fetchPosts, fetchProof, flagPost, uploadProof, verifyProof } from "../../lib/api";
+import { fetchPosts } from "../../lib/api";
 import styles from "./Home.module.css";
 
 export function Home() {
   const [posts, setPosts] = useState<PublicPost[] | null>(null);
-  const [ledgerByPost, setLedgerByPost] = useState<Record<number, PublicLedgerEntry[]>>({});
-  const [proofByPost, setProofByPost] = useState<Record<number, ProofEntry[]>>({});
   const [error, setError] = useState<string | null>(null);
 
   const loadFeed = useCallback(async () => {
@@ -19,24 +18,14 @@ export function Home() {
       const list = await fetchPosts();
       setPosts(list);
       setError(null);
-
-      const [ledgerResults, proofResults] = await Promise.all([
-        Promise.all(list.map((p) => fetchLedger(p.id))),
-        Promise.all(list.map((p) => fetchProof(p.id))),
-      ]);
-
-      const byPost: Record<number, PublicLedgerEntry[]> = {};
-      const proofMap: Record<number, ProofEntry[]> = {};
-      list.forEach((p, i) => {
-        byPost[p.id] = ledgerResults[i];
-        proofMap[p.id] = proofResults[i];
-      });
-      setLedgerByPost(byPost);
-      setProofByPost(proofMap);
+      await loadAuxData(list);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const { loadAuxData, postCardProps } = usePostInteractions(loadFeed);
 
   useEffect(() => {
     loadFeed();
@@ -59,27 +48,7 @@ export function Home() {
           {!error && !posts && <div className={styles.loading}>Loading posts…</div>}
 
           {posts?.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              recentDonations={ledgerByPost[post.id] ?? []}
-              proofEntries={proofByPost[post.id] ?? []}
-              onDonate={async (amountInRupees) => {
-                await donate(post.id, amountInRupees * 100);
-                await loadFeed();
-              }}
-              onUploadProof={async (file) => {
-                await uploadProof(post.id, file);
-                await loadFeed();
-              }}
-              onVerifyProof={async (proofId) => {
-                await verifyProof(post.id, proofId);
-                await loadFeed();
-              }}
-              onFlag={async () => {
-                await flagPost(post.id);
-              }}
-            />
+            <PostCard key={post.id} post={post} {...postCardProps(post)} />
           ))}
         </div>
 

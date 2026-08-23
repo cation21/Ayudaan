@@ -1,5 +1,7 @@
 import type {
+  LikeStatus,
   OrgRole,
+  PostComment,
   ProofEntry,
   PublicLedgerEntry,
   PublicPost,
@@ -105,6 +107,39 @@ export async function flagPost(postId: number): Promise<{ id: number; status: st
     headers: { ...authHeaders() },
   });
   if (!res.ok) throw new Error(await parseErrorMessage(res, `POST /posts/${postId}/flag failed: ${res.status}`));
+  return res.json();
+}
+
+// --- Likes / comments ("₹1 to interact", spec section 4.3) -----------
+
+export async function fetchLikeStatus(postId: number): Promise<LikeStatus> {
+  const res = await fetch(`${API_URL}/posts/${postId}/likes`, { headers: { ...authHeaders() } });
+  if (!res.ok) throw new Error(await parseErrorMessage(res, `GET /posts/${postId}/likes failed: ${res.status}`));
+  return res.json();
+}
+
+export async function likePost(postId: number): Promise<{ liked: boolean; alreadyLiked: boolean }> {
+  const res = await fetch(`${API_URL}/posts/${postId}/like`, {
+    method: "POST",
+    headers: { ...authHeaders() },
+  });
+  if (!res.ok) throw new Error(await parseErrorMessage(res, `POST /posts/${postId}/like failed: ${res.status}`));
+  return res.json();
+}
+
+export async function fetchComments(postId: number): Promise<PostComment[]> {
+  const res = await fetch(`${API_URL}/posts/${postId}/comments`);
+  if (!res.ok) throw new Error(await parseErrorMessage(res, `GET /posts/${postId}/comments failed: ${res.status}`));
+  return res.json();
+}
+
+export async function postComment(postId: number, body: string): Promise<PostComment> {
+  const res = await fetch(`${API_URL}/posts/${postId}/comments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ body }),
+  });
+  if (!res.ok) throw new Error(await parseErrorMessage(res, `POST /posts/${postId}/comments failed: ${res.status}`));
   return res.json();
 }
 
