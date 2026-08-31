@@ -2,7 +2,7 @@
 
 Ayudaan aims to be a common platform for the following activites:
 1. A transparent donation platform where verified users can ask for donation for their causes, including individual, organizations etc.
-2. Everything transaction is verifiable on-chain and immutable.
+2. Every transaction is verifiable on-chain and immutable.
 3. Proof of work after donation is necessary, fund will be released in batches if the amount is high to make sure the work is getting done(via an internal team)
 4. CSR made easy with NGOs making requests or claiming the CSR budget and guidelines posted on the platform. It will get released and proof of work will also exist likewise.
 
